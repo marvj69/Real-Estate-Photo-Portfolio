@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Mark Heinonen | Architectural Photography</title>
+ <link rel="preconnect" href="https://cdn.tailwindcss.com">
+ <link rel="preload" as="image" href="photos/Exterior%20Photos/50125604-1.JPG">
+ <script src="https://cdn.tailwindcss.com"></script>
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+ <style>
+   :root {
+     --bg-dark: #0a0a0a;
+     --text-light: #f5f5f5;
+     --accent: #c9a962;
+     --stone-400: #a8a29e;
+     --stone-600: #57534e;
+     --stone-800: #292524;
+     --stone-900: #1c1917;
+   }
+   
+   body {
+     font-family: 'Inter', sans-serif;
+     background-color: var(--bg-dark);
+     color: var(--text-light);
+     overflow-x: hidden;
+   }
+   
+   .serif {
+     font-family: 'Playfair Display', serif;
+   }
+   
+   /* Film grain overlay */
+   .grain {
+     position: fixed;
+     top: 0;
+     left: 0;
+     width: 100%;
+     height: 100%;
+     pointer-events: none;
+     z-index: 9999;
+     opacity: 0.035;
+     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+   }
+   
+   /* Smooth reveal animation */
+   .reveal {
+     opacity: 0;
+     transform: translateY(40px);
+     transition: opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1), transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+     will-change: opacity, transform;
+   }
+   
+   .reveal.active {
+     opacity: 1;
+     transform: translateY(0);
+   }
+   
+   /* Image hover effects */
+   .image-container {
+     overflow: hidden;
+     position: relative;
+   }
+   
+   .image-hover {
+     transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1), filter 0.8s ease;
+     will-change: transform;
+   }
+
+   #hero-bg {
+     will-change: transform;
+   }
+
+   .group:hover .image-hover {
+     transform: scale(1.08);
+   }
+   
+   /* Custom cursor for gallery */
+   .cursor-view {
+     cursor: zoom-in;
+   }
+   
+   /* Lightbox */
+   .lightbox {
+     display: none;
+     position: fixed;
+     top: 0;
+     left: 0;
+     width: 100%;
+     height: 100%;
+     background: rgba(10, 10, 10, 0.98);
+     z-index: 100;
+     opacity: 0;
+     transition: opacity 0.4s ease;
+   }
+   
+   .lightbox.active {
+     display: flex;
+     opacity: 1;
+   }
+   
+   /* Custom scrollbar */
+   ::-webkit-scrollbar {
+     width: 6px;
+   }
+   
+   ::-webkit-scrollbar-track {
+     background: var(--bg-dark);
+   }
+   
+   ::-webkit-scrollbar-thumb {
+     background: var(--stone-800);
+     border-radius: 3px;
+   }
+   
+   ::-webkit-scrollbar-thumb:hover {
+     background: var(--stone-600);
+   }
+   
+   /* Filter buttons */
+   .filter-btn {
+     position: relative;
+     transition: all 0.4s ease;
+   }
+   
+   .filter-btn::after {
+     content: '';
+     position: absolute;
+     bottom: -2px;
+     left: 0;
+     width: 0;
+     height: 1px;
+     background: var(--accent);
+     transition: width 0.4s ease;
+   }
+   
+   .filter-btn:hover::after,
+   .filter-btn.active::after {
+     width: 100%;
+   }
+   
+   .filter-btn.active {
+     color: var(--accent);
+   }
+   
+   /* Text selection */
+   ::selection {
+     background: rgba(201, 169, 98, 0.3);
+     color: #fff;
+   }
+   
+   /* Loader */
+   .image-loading {
+     background: linear-gradient(90deg, var(--stone-900) 25%, var(--stone-800) 50%, var(--stone-900) 75%);
+     background-size: 200% 100%;
+     animation: loading 1.5s infinite;
+   }
+   
+   @keyframes loading {
+     0% { background-position: 200% 0; }
+     100% { background-position: -200% 0; }
+   }
+
+   /* FIXED: Collage gallery - No overlaps, perfect fit */
+   .gallery-collage {
+     display: grid;
+     grid-template-columns: repeat(12, 1fr);
+     grid-auto-rows: 120px; /* Base row height */
+     gap: clamp(0.8rem, 2vw, 1.5rem);
+     align-items: stretch;
+     grid-auto-flow: dense;
+   }
+
+   .gallery-item {
+     position: relative;
+     overflow: hidden;
+     border-radius: 4px;
+     border: 1px solid rgba(168, 162, 158, 0.12);
+     background: #111;
+     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+     grid-column: span var(--col-span, 4);
+     grid-row: span var(--row-span, 2);
+     transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), 
+                 box-shadow 0.4s ease,
+                 border-color 0.4s ease;
+     will-change: transform;
+   }
+
+   /* Responsive grid spans */
+   @media (min-width: 1200px) {
+     .gallery-item { --base-col: 4; }
+     .gallery-item[data-shape="hero"] { --col-span: 8; --row-span: 4; }
+     .gallery-item[data-shape="portrait"] { --col-span: 3; --row-span: 4; }
+     .gallery-item[data-shape="wide"] { --col-span: 6; --row-span: 3; }
+     .gallery-item[data-shape="square"] { --col-span: 4; --row-span: 3; }
+     .gallery-item[data-shape="panorama"] { --col-span: 12; --row-span: 3; }
+   }
+
+   @media (min-width: 768px) and (max-width: 1199px) {
+     .gallery-collage { grid-template-columns: repeat(6, 1fr); }
+     .gallery-item { --col-span: 3; --row-span: 3; }
+     .gallery-item[data-shape="hero"] { --col-span: 6; --row-span: 4; }
+     .gallery-item[data-shape="panorama"] { --col-span: 6; --row-span: 3; }
+   }
+
+   @media (max-width: 767px) {
+     .gallery-collage { 
+       grid-template-columns: 1fr; 
+       grid-auto-rows: auto;
+     }
+     .gallery-item { 
+       --col-span: 1 !important; 
+       --row-span: 1 !important;
+       aspect-ratio: 4/3;
+       min-height: 300px;
+     }
+   }
+
+   .gallery-item:hover {
+     border-color: rgba(201, 169, 98, 0.3);
+     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+     z-index: 10;
+   }
+
+   .gallery-item img {
+     width: 100%;
+     height: 100%;
+     object-fit: cover; /* This crops beautifully */
+     object-position: center;
+     transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1), 
+                 opacity 0.8s ease;
+   }
+
+   .gallery-item:hover img {
+     transform: scale(1.05);
+   }
+
+   .gallery-item.reveal {
+     opacity: 0;
+     transform: translateY(30px) scale(0.96);
+   }
+
+   .gallery-item.reveal.active {
+     opacity: 1;
+     transform: translateY(0) scale(1);
+   }
+ </style>
+</head>
+<body class="antialiased">
+
+ <div class="grain"></div>
+
+ <!-- Navigation -->
+ <nav class="fixed top-0 w-full z-50 px-6 md:px-12 py-6 flex justify-between items-center mix-blend-difference text-white transition-all duration-500" id="navbar">
+   <div class="text-2xl serif tracking-tight font-medium">MH</div>
+   <div class="hidden md:flex gap-10 text-xs tracking-[0.2em] uppercase font-medium">
+     <a href="#work" class="hover:text-stone-400 transition-colors duration-300">Work</a>
+     <a href="#about" class="hover:text-stone-400 transition-colors duration-300">About</a>
+     <a href="#contact" class="hover:text-stone-400 transition-colors duration-300">Contact</a>
+   </div>
+   <button onclick="scrollToContact()" class="md:hidden text-xs tracking-widest uppercase border border-white/20 px-5 py-2 rounded-full hover:bg-white hover:text-black transition-all duration-300">
+     Contact
+   </button>
+ </nav>
+
+ <!-- Hero Section -->
+ <section class="relative h-screen flex items-center justify-center overflow-hidden">
+   <!-- Background with parallax -->
+	   <div class="absolute inset-0 z-0 scale-110" id="hero-bg">
+	     <img src="photos/Exterior%20Photos/50125604-1.JPG" 
+	          class="w-full h-full object-cover opacity-50" 
+	          loading="eager"
+	          decoding="async"
+	          fetchpriority="high"
+	          alt="Upper Peninsula home exterior">
+	     <div class="absolute inset-0 bg-gradient-to-b from-black/70 via-black/20 to-[#0a0a0a]"></div>
+	   </div>
+   
+   <div class="relative z-10 text-center px-6 max-w-6xl mx-auto">
+     <p class="text-stone-400 text-xs md:text-sm tracking-[0.4em] uppercase mb-8 reveal">Western Upper Peninsula</p>
+     
+     <h1 class="text-6xl md:text-8xl lg:text-9xl font-light leading-[0.9] mb-8 reveal" style="transition-delay: 100ms;">
+       Mark <span class="serif italic text-stone-500 font-normal">Heinonen</span>
+     </h1>
+     
+     <p class="text-lg md:text-xl text-stone-300 font-light max-w-2xl mx-auto leading-relaxed tracking-wide reveal" style="transition-delay: 200ms;">
+       Architectural photography capturing the soul of Northern Michigan homes
+     </p>
+     
+     <div class="mt-12 reveal" style="transition-delay: 300ms;">
+       <div class="w-[1px] h-16 bg-gradient-to-b from-transparent via-stone-500 to-transparent mx-auto"></div>
+     </div>
+   </div>
+   
+   <!-- Scroll indicator -->
+   <div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-50">
+     <span class="text-[10px] tracking-widest uppercase vertical-text" style="writing-mode: vertical-rl;">Scroll</span>
+     <div class="w-[1px] h-12 bg-stone-500 animate-pulse"></div>
+   </div>
+ </section>
+
+ <!-- Gallery Section -->
+	 <section id="work" class="py-32 px-6 md:px-12 max-w-[1600px] mx-auto">
+   
+   <!-- Gallery Header -->
+   <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-20 gap-8 reveal">
+     <div>
+       <h2 class="text-4xl md:text-6xl serif mb-4">Selected Works</h2>
+       <p class="text-stone-400 max-w-md text-sm md:text-base leading-relaxed">
+         A curated collection of interior and exterior architectural photography from across the Keweenaw and beyond.
+       </p>
+     </div>
+     
+     <!-- Filters -->
+	     <div class="flex gap-8 text-xs tracking-[0.2em] uppercase">
+	       <button onclick="filterGallery('all')" data-category="all" class="filter-btn active text-stone-300 hover:text-white">All Work</button>
+	       <button onclick="filterGallery('interior')" data-category="interior" class="filter-btn text-stone-500 hover:text-white">Interior</button>
+	       <button onclick="filterGallery('exterior')" data-category="exterior" class="filter-btn text-stone-500 hover:text-white">Exterior</button>
+	     </div>
+	   </div>
+
+   <!-- Collage Grid -->
+   <div class="gallery-collage" id="gallery">
+     <!-- Gallery items injected via JS -->
+   </div>
+   
+ </section>
+
+ <!-- About Section -->
+	 <section id="about" class="py-32 px-6 md:px-12 bg-stone-900/20 border-y border-stone-900">
+   <div class="max-w-6xl mx-auto">
+     <div class="grid lg:grid-cols-12 gap-12 lg:gap-20 items-center">
+       
+       <!-- Image -->
+       <div class="lg:col-span-5 reveal">
+	         <div class="relative aspect-[4/5] overflow-hidden">
+	           <img src="photos/Interior%20Photos/50171450-040db75a-aa31-47b3-90c8-8a4903c7033a.JPG" 
+	                alt="Interior architectural detail" 
+	                loading="lazy"
+	                decoding="async"
+	                class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000">
+	           <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+	         </div>
+       </div>
+       
+       <!-- Content -->
+       <div class="lg:col-span-7 reveal">
+         <p class="text-stone-500 text-xs tracking-[0.3em] uppercase mb-4">The Photographer</p>
+         <h2 class="text-4xl md:text-5xl serif mb-8 leading-tight">
+           Documenting the architecture of the <span class="italic text-stone-400">Upper Peninsula</span>
+         </h2>
+         
+         <div class="space-y-6 text-stone-400 font-light leading-relaxed text-base md:text-lg">
+           <p>
+             Based in Chassell, Michigan, I specialize in capturing the unique architectural character of homes across the Western Upper Peninsula. From historic Victorian cottages on the Keweenaw shoreline to modern cabins nestled in the Ottawa National Forest, my work emphasizes natural light, honest composition, and the subtle interplay between built environments and the rugged Northwoods landscape.
+           </p>
+           <p>
+             With over a decade of experience in architectural photography, I understand that a home is more than structure—it's a story. Whether you're a homeowner preserving your property's legacy, a realtor seeking distinctive listing imagery, or a designer documenting your craft, I bring technical precision and artistic sensitivity to every frame.
+           </p>
+         </div>
+         
+         <div class="mt-10 pt-10 border-t border-stone-800">
+           <p class="text-xs tracking-[0.2em] uppercase text-stone-500 mb-2">Location</p>
+           <p class="serif text-xl">44312 Paradise Road, Chassell, MI 49916</p>
+           <p class="text-stone-400 text-sm mt-1">Serving the Western Upper Peninsula</p>
+         </div>
+       </div>
+       
+     </div>
+   </div>
+ </section>
+
+ <!-- Contact Section -->
+	 <section id="contact" class="py-40 px-6 md:px-12 relative overflow-hidden">
+   <!-- Decorative background element -->
+   <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-stone-900/30 rounded-full blur-3xl pointer-events-none"></div>
+   
+   <div class="max-w-5xl mx-auto relative z-10 text-center reveal">
+     <p class="text-stone-500 text-xs tracking-[0.4em] uppercase mb-6">Commission Inquiries</p>
+     <h2 class="text-5xl md:text-7xl serif mb-12 leading-tight">
+       Let's create something <span class="italic text-stone-500">timeless</span>
+     </h2>
+     
+     <div class="grid md:grid-cols-2 gap-8 md:gap-4 mt-16 max-w-4xl mx-auto">
+       <!-- Phone -->
+       <div class="group p-8 border border-stone-800 hover:border-[#c9a962]/50 transition-all duration-500 rounded-sm bg-black/20 backdrop-blur-sm text-center">
+         <p class="text-stone-600 text-[10px] tracking-[0.3em] uppercase mb-4">Telephone</p>
+         <a href="tel:9062992350" class="text-2xl serif hover:text-[#c9a962] transition-colors duration-300 block">
+           (906) 299-2350
+         </a>
+       </div>
+       
+       <!-- Email -->
+       <div class="group p-8 border border-stone-800 hover:border-[#c9a962]/50 transition-all duration-500 rounded-sm bg-black/20 backdrop-blur-sm text-center">
+         <p class="text-stone-600 text-[10px] tracking-[0.3em] uppercase mb-4">Email</p>
+         <a href="mailto:heinonenmh@gmail.com" class="text-xl md:text-2xl serif hover:text-[#c9a962] transition-colors duration-300 block break-all">
+           heinonenmh@gmail.com
+         </a>
+       </div>
+       
+     </div>
+     
+     <div class="mt-20">
+       <p class="text-stone-600 text-xs tracking-[0.2em] uppercase">Available for projects across</p>
+       <p class="text-stone-400 mt-2 serif text-lg">Houghton • Keweenaw • Baraga • Ontonagon Counties</p>
+     </div>
+   </div>
+ </section>
+
+ <!-- Footer -->
+ <footer class="py-12 px-6 border-t border-stone-900/50 text-center">
+   <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+     <div class="serif text-2xl">Mark Heinonen</div>
+     <p class="text-stone-600 text-xs tracking-widest uppercase">
+       &copy; 2024 All Rights Reserved
+     </p>
+     <div class="text-stone-600 text-xs">
+       Western Upper Peninsula, Michigan
+     </div>
+   </div>
+ </footer>
+
+ <!-- Lightbox Modal -->
+ <div id="lightbox" class="lightbox items-center justify-center p-4 md:p-12" onclick="closeLightbox(event)">
+   <button class="absolute top-6 right-6 text-white/50 hover:text-white text-5xl font-light transition-colors z-50" onclick="closeLightbox(event)">&times;</button>
+   
+   <div class="relative max-w-[90vw] max-h-[90vh] flex flex-col items-center">
+	     <img id="lightbox-img" src="" alt="Full size" decoding="async" class="max-w-full max-h-[85vh] object-contain shadow-2xl">
+     <div class="mt-6 text-center">
+       <p id="lightbox-caption" class="text-stone-400 text-xs tracking-[0.3em] uppercase"></p>
+       <p class="text-stone-600 text-[10px] mt-2 tracking-widest">Click anywhere to close</p>
+     </div>
+   </div>
+ </div>
+
+ <script>
+   // Portfolio Data
+   const interiorFiles = [
+     '50125604-59.JPG',
+     '50125604-6.JPG',
+     '50143303-30495F7A-E85F-40E2-BB6D-26C88158E155.JPG',
+     '50147974-8fb28395-1cae-4bfd-a245-f33c59ee8db8.JPG',
+     '50171450-040db75a-aa31-47b3-90c8-8a4903c7033a.JPG',
+     '50171450-0dfd96bb-9f34-4f20-9b99-cd3bb461d1cf.JPG',
+     '50171450-2008bd75-ebd4-48ff-897b-2e2e59a08240.JPG',
+     '50187944-02659879-ad17-4106-b16f-5edd122cde3f.JPG',
+     '50187944-2f694e4b-00ac-4801-8641-626f439c79fd-2.JPG',
+     '50187944-8976b19e-2611-4826-ae0d-f7661b824245.JPG'
+   ];
+
+   const exteriorFiles = [
+     '50125604-1.JPG',
+     '50125604-88.JPG',
+     '50143303-9A584368-339B-4A9B-AE68-2DF85B220994.JPG',
+     '50148972-38e0b392-0f45-43c4-926d-7c9daa707251.JPG',
+     '50148972-f5220a56-1d22-4584-8a9e-f163489bb5ae.JPG',
+     '50152796-D6EB018A-B3AD-4BB4-AB46-57260176819A.JPG',
+     '50176043-0efe7880-2fb2-4b6f-b8db-59b76cd28563.JPG',
+     '50176043-f80b3578-c358-4e11-a54c-0fd0185ec2fe.JPG',
+     'DJI_0032_3_4.jpg',
+     'DJI_0131_2_3.jpg',
+     'DJI_0395_6_7.jpg',
+     'DJI_0626_7_8.jpg',
+     'DJI_0923_4_5.jpg',
+     'DJI_0929_30_31.jpg',
+     'DJI_0938_39_40.jpg',
+     'DJI_0959_60_61.jpg',
+     'DJI_0977_8_9.jpg',
+     'DJI_1002_3_4.jpg'
+   ];
+
+   const toPhotoPath = (folder, filename) => encodeURI(`photos/${folder}/${filename}`);
+
+   const portfolio = [
+     ...interiorFiles.map((filename, index) => {
+       const imagePath = toPhotoPath('Interior Photos', filename);
+       return {
+         src: imagePath,
+         thumb: imagePath,
+         category: 'interior',
+         title: `Interior ${String(index + 1).padStart(2, '0')}`,
+         location: 'Western Upper Peninsula, MI'
+       };
+     }),
+     ...exteriorFiles.map((filename, index) => {
+       const imagePath = toPhotoPath('Exterior Photos', filename);
+       return {
+         src: imagePath,
+         thumb: imagePath,
+         category: 'exterior',
+         title: `Exterior ${String(index + 1).padStart(2, '0')}`,
+         location: 'Western Upper Peninsula, MI'
+       };
+     })
+   ];
+
+   // FIXED: Better collage pattern with calculated row spans to prevent overlap
+   const collagePattern = [
+     { shape: 'hero', colSpan: 8, rowSpan: 4, minWidth: 'lg' },
+     { shape: 'portrait', colSpan: 4, rowSpan: 4, minWidth: 'lg' },
+     { shape: 'wide', colSpan: 6, rowSpan: 3, minWidth: 'md' },
+     { shape: 'wide', colSpan: 6, rowSpan: 3, minWidth: 'md' },
+     { shape: 'portrait', colSpan: 4, rowSpan: 4, minWidth: 'lg' },
+     { shape: 'square', colSpan: 4, rowSpan: 3, minWidth: 'md' },
+     { shape: 'portrait', colSpan: 4, rowSpan: 4, minWidth: 'lg' },
+     { shape: 'panorama', colSpan: 12, rowSpan: 3, minWidth: 'md' }
+   ];
+
+   // Render Gallery
+	   let revealObserver = null;
+
+	   function getRevealObserver() {
+	     if (revealObserver) return revealObserver;
+
+	     revealObserver = new IntersectionObserver((entries) => {
+	       entries.forEach(entry => {
+	         if (entry.isIntersecting) {
+	           entry.target.classList.add('active');
+	           revealObserver.unobserve(entry.target);
+	         }
+	       });
+	     }, {
+	       threshold: 0.1,
+	       rootMargin: '0px 0px -50px 0px'
+	     });
+
+	     return revealObserver;
+	   }
+
+	   function shuffleItems(items) {
+	     const shuffled = [...items];
+	     for (let i = shuffled.length - 1; i > 0; i -= 1) {
+	       const j = Math.floor(Math.random() * (i + 1));
+	       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+	     }
+	     return shuffled;
+	   }
+
+	   function renderGallery(filter = 'all') {
+	     const grid = document.getElementById('gallery');
+	     const fragment = document.createDocumentFragment();
+	     const itemsToRender = filter === 'all'
+	       ? shuffleItems(portfolio)
+	       : portfolio.filter(item => item.category === filter);
+	     
+	     let visibleIndex = 0;
+	     let delay = 0;
+	     
+	     itemsToRender.forEach((item) => {
+
+       const el = document.createElement('article');
+       const layout = collagePattern[visibleIndex % collagePattern.length];
+
+       el.className = `gallery-item group cursor-view reveal`;
+       el.setAttribute('data-shape', layout.shape);
+       
+       // Set CSS variables for grid positioning
+       el.style.setProperty('--col-span', layout.colSpan || 4);
+       el.style.setProperty('--row-span', layout.rowSpan || 3);
+       el.style.transitionDelay = `${delay}ms`;
+       
+       delay += 100;
+       visibleIndex += 1;
+
+       el.innerHTML = `
+         <div class="w-full h-full bg-stone-900 image-loading">
+           <img src="${item.thumb}" 
+                alt="${item.title}" 
+                class="w-full h-full object-cover image-hover opacity-90 group-hover:opacity-100"
+                loading="lazy"
+                decoding="async"
+                onload="this.parentElement.classList.remove('image-loading')">
+         </div>
+
+         <div class="absolute top-4 left-4 z-20">
+           <p class="text-[9px] md:text-[10px] tracking-[0.28em] uppercase text-stone-300/90 bg-black/40 px-3 py-1.5 rounded-sm backdrop-blur-md border border-white/5">
+             ${item.category}
+           </p>
+         </div>
+        
+         <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-6 md:p-8 z-10">
+           <h3 class="text-xl md:text-2xl serif text-white translate-y-4 group-hover:translate-y-0 transition-transform duration-500 delay-75">${item.title}</h3>
+           <p class="text-xs md:text-sm text-stone-300 mt-2 tracking-wide translate-y-4 group-hover:translate-y-0 transition-transform duration-500 delay-100">${item.location}</p>
+         </div>
+       `;
+
+       el.onclick = () => openLightbox(item.src, item.title, item.location);
+       fragment.appendChild(el);
+	     });
+
+	     grid.replaceChildren(fragment);
+	     
+	     // Re-trigger observer for new elements
+	     setTimeout(observeElements, 100);
+	   }
+
+   // Filter functionality
+	   function filterGallery(category) {
+	     // Update buttons
+	     document.querySelectorAll('.filter-btn').forEach(btn => {
+	       btn.classList.toggle('active', btn.dataset.category === category);
+	     });
+	     
+	     renderGallery(category);
+	   }
+
+   // Lightbox functions
+   function openLightbox(src, title, location) {
+     const lightbox = document.getElementById('lightbox');
+     const img = document.getElementById('lightbox-img');
+     const caption = document.getElementById('lightbox-caption');
+     
+     img.src = src;
+     caption.textContent = `${title} — ${location}`;
+     lightbox.classList.add('active');
+     document.body.style.overflow = 'hidden';
+     
+     // Add keyboard support
+     document.addEventListener('keydown', handleKeydown);
+   }
+
+   function closeLightbox(e) {
+     if (e.type === 'keydown' || e.target.id === 'lightbox' || e.target.tagName === 'BUTTON') {
+       document.getElementById('lightbox').classList.remove('active');
+       document.body.style.overflow = '';
+       document.removeEventListener('keydown', handleKeydown);
+     }
+   }
+
+   function handleKeydown(e) {
+     if (e.key === 'Escape') closeLightbox(e);
+   }
+
+	   // Intersection Observer for animations
+	   function observeElements() {
+	     const observer = getRevealObserver();
+	     document.querySelectorAll('.reveal:not(.active)').forEach(el => observer.observe(el));
+	   }
+
+   // Smooth scroll helper
+   function scrollToContact() {
+     document.getElementById('contact').scrollIntoView({ behavior: 'smooth' });
+   }
+
+	   const heroBg = document.getElementById('hero-bg');
+	   const nav = document.getElementById('navbar');
+	   let latestScrollY = 0;
+	   let isScrollTicking = false;
+	   let isNavOpaque = false;
+
+	   function updateScrollEffects() {
+	     if (heroBg) {
+	       heroBg.style.transform = `translate3d(0, ${latestScrollY * 0.5}px, 0) scale(1.1)`;
+	     }
+
+	     const shouldBeOpaque = latestScrollY > 100;
+	     if (shouldBeOpaque !== isNavOpaque) {
+	       isNavOpaque = shouldBeOpaque;
+	       nav.classList.toggle('bg-black/80', shouldBeOpaque);
+	       nav.classList.toggle('backdrop-blur-md', shouldBeOpaque);
+	     }
+
+	     isScrollTicking = false;
+	   }
+
+	   // Parallax effect for hero + navbar transparency
+	   window.addEventListener('scroll', () => {
+	     latestScrollY = window.pageYOffset;
+	     if (!isScrollTicking) {
+	       isScrollTicking = true;
+	       window.requestAnimationFrame(updateScrollEffects);
+	     }
+	   }, { passive: true });
+
+   // Initialize
+   document.addEventListener('DOMContentLoaded', () => {
+     renderGallery();
+     observeElements();
+     
+     // Smooth scroll for anchor links
+     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+       anchor.addEventListener('click', function (e) {
+         e.preventDefault();
+         const target = document.querySelector(this.getAttribute('href'));
+         if (target) target.scrollIntoView({ behavior: 'smooth' });
+       });
+     });
+   });
+ </script>
+</body>
+</html>
