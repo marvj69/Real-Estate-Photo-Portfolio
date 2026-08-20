@@ -72,6 +72,17 @@ function renderGallery(filter = 'all') {
         </p>
       </div>
 
+      <div class="absolute top-4 right-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
+        <div class="w-8 h-8 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-stone-300">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="15 3 21 3 21 9"/>
+            <polyline points="9 21 3 21 3 15"/>
+            <line x1="21" y1="3" x2="14" y2="10"/>
+            <line x1="3" y1="21" x2="10" y2="14"/>
+          </svg>
+        </div>
+      </div>
+
       <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-6 md:p-8 z-10">
         <h3 class="text-xl md:text-2xl serif text-white translate-y-4 group-hover:translate-y-0 transition-transform duration-500 delay-75">${item.title}</h3>
         <p class="text-xs md:text-sm text-stone-300 mt-2 tracking-wide translate-y-4 group-hover:translate-y-0 transition-transform duration-500 delay-100">${item.location}</p>

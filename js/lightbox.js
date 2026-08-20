@@ -17,7 +17,7 @@ function openLightbox(src, title, location, alt) {
 }
 
 function closeLightbox(e) {
-  if (e.type === 'keydown' || e.target.id === 'lightbox' || e.target.tagName === 'BUTTON') {
+  if (e.type === 'keydown' || e.target.id === 'lightbox' || e.target.closest('button')) {
     document.getElementById('lightbox').classList.remove('active');
     document.body.style.overflow = '';
     document.removeEventListener('keydown', handleKeydown);
