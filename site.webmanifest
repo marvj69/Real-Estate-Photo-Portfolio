@@ -1,0 +1,17 @@
+{
+  "name": "Mark Heinonen | Architectural & Real Estate Photography",
+  "short_name": "Mark Heinonen",
+  "description": "Architectural and real estate photography documenting homes and properties throughout Michigan's Western Upper Peninsula.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

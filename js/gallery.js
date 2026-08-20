@@ -59,7 +59,7 @@ function renderGallery(filter = 'all') {
     el.innerHTML = `
       <div class="w-full h-full bg-stone-900 image-loading">
         <img src="${item.thumb}"
-             alt="${item.title}"
+             alt="${item.alt || item.title}"
              class="w-full h-full object-cover image-hover opacity-90 group-hover:opacity-100"
              loading="lazy"
              decoding="async"
@@ -78,7 +78,7 @@ function renderGallery(filter = 'all') {
       </div>
     `;
 
-    el.onclick = () => openLightbox(item.src, item.title, item.location);
+    el.onclick = () => openLightbox(item.src, item.title, item.location, item.alt);
     fragment.appendChild(el);
   });
 
